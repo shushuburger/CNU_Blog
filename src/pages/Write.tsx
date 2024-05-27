@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { createPost, getPostById, updatePostById } from '../api';
 import { TAG } from '../api/types';
+import useGetPostById from '../queries/useGetPostById.ts';
+import useCreatePost from '../queries/useCreatePost.ts';
+import useUpdatePostById from '../queries/useUpdatePostById.ts';
 
 const TitleInput = styled.input`
   display: block;
@@ -85,12 +88,76 @@ const SaveButton = styled.button`
 `;
 
 const Write = () => {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const isEdit = state?.postId;
+
   // todo (5) 게시글 작성 페이지 만들기
+  const [title, setTitle] = useState('');
+  const [contents, setContents] = useState('');
+  const [tag, setTag] = useState<TAG>(TAG.REACT);
+  const tagList = Object.keys(TAG);
+
+  const { data: post, isSuccess: isSuccessfetchPost } = useGetPostById(state?.postId);
+  const { mutate: createPost, isSuccess: isCreateSuccess } = useCreatePost();
+  const { mutate: updateaPost, isSuccess: isUpdateSuccess } = useUpdatePostById();
+
+  useEffect(() => {
+    if (isSuccessfetchPost) {
+      setTitle(post?.title);
+      setContents(post?.contents);
+      setTag(post?.tag);
+    }
+  }, [isSuccessfetchPost]);
+
+  const clickConfirm = () => {
+    if (!title || !contents) {
+      alert('빈 값이 있습니다.');
+      return;
+    }
+
+    if (isEdit) {
+      updateaPost({ postId: state.postId, title, contents, tag });
+    } else {
+      createPost({ title, contents, tag });
+    }
+
+    if (isCreateSuccess || isUpdateSuccess) {
+      navigate('/');
+    }
+  };
+
+  const handleChangTitle = (event: ChangeEvent<HTMLInputElement>) => {
+    console.info(event);
+    setTitle(event.target.value);
+  };
+
+  const handleChangeContents = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setContents(event.target.value);
+  };
+
+  const handleChangTag = (event: ChangeEvent<HTMLSelectElement>) => {
+    setTag(event.target.value as TAG);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      나는 글쓰기
-      <div style={{ height: 'calc(100% - 4rem)', paddingBottom: '4rem' }}>{/*todo (5-2) 제목 / 태그 셀렉 / 내용 입력란 추가*/}</div>
-      <BottomSheet>{/*todo (5-3) 나가기, 저장하기 버튼 추가*/}</BottomSheet>
+      <div style={{ height: 'calc(100% - 4rem)', paddingBottom: '4rem' }}>
+        {/*todo (5-2) 제목 / 태그 셀렉 / 내용 입력란 추가*/}
+        <TitleInput placeholder="제목을 입력하세요" value={title} onChange={handleChangTitle} />
+        <TagSelect placeholder="태그를 선택하세요" value={tag} onChange={handleChangTag}>
+          {tagList.map(tag => (
+            <option key={tag}>{tag}</option>
+          ))}
+        </TagSelect>
+        <Editor placeholder="내용을 입력하세요" value={contents} onChange={handleChangeContents} />
+      </div>
+      <BottomSheet>
+        <Link to="/">
+          <ExitButton>나가기</ExitButton>
+        </Link>
+        <SaveButton onClick={clickConfirm}>저장하기</SaveButton>
+      </BottomSheet>
     </div>
   );
 };

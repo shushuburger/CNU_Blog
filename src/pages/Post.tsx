@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { deletePostById, getPostById } from '../api';
-import { IPost } from '../api/types';
 import NotFound from '../components/NotFound';
 import Tag from '../components/Tag';
+import useGetPostById from '../queries/useGetPostById.ts';
+import useDeletePostById from '../queries/useDeletePostById.ts';
 
 const Title = styled.h1`
   font-size: 3rem;
@@ -62,20 +61,21 @@ const Text = styled.p`
 const Post = () => {
   const params = useParams();
   const { postId = '' } = params;
-  const [post, setPost] = useState<IPost | null>(null);
+  const { data: post, isError, isLoading } = useGetPostById(postId);
+  const { mutate: deletePost } = useDeletePostById();
 
-  const fetchPostById = async (id: string) => {
-    const { data } = await getPostById(id);
-    setPost(data);
+  const clickDeleteButton = () => {
+    const result = window.confirm('정말로 게시글을 삭제하시겠습니까?');
+    if (result) {
+      deletePost({ postId });
+    }
   };
 
-  useEffect(() => {
-    if (postId) {
-      fetchPostById(postId);
-    }
-  }, []);
+  if (isLoading) {
+    return <div>...불러오는 중...</div>;
+  }
 
-  if (!post) {
+  if (!post || isError) {
     return <NotFound />;
   }
 
@@ -90,8 +90,10 @@ const Post = () => {
           </Info>
           <div>
             {/*todo 수정/삭제 버튼 작성*/}
-            <TextButton>수정</TextButton>
-            <TextButton>삭제</TextButton>
+            <Link to="/write" state={{ postId }}>
+              <TextButton style={{ marginRight: 10 }}>수정</TextButton>
+            </Link>
+            <TextButton onClick={clickDeleteButton}>삭제</TextButton>
           </div>
         </Toolbar>
         {post?.tag && (
