@@ -32,7 +32,29 @@ const list = [
 ];
 
 const Home = () => {
-  return <div>{/*todo (3-1) post 목록 작성*/}</div>;
+  const [postList, setPostList] = useState<IResponsePostList>([]);
+  const fetchPostList = async () => {
+    const { data } = await getPostList();
+    setPostList(data);
+  };
+
+  useEffect(() => {
+    fetchPostList();
+  }, []);
+
+  if (postList.length === 0) {
+    return <NoPostList />;
+  }
+
+  return (
+    <div>
+      {postList.map(item => (
+        // eslint-disable-next-line react/jsx-key
+        <PostListItem key={item.id} id={`${item.id}`} title={item.title} contents={item.contents} tag={item.tag} />
+        //<PostListItem key={item.id} {...item} />
+      ))}
+    </div>
+  );
 };
 
 export default Home;
