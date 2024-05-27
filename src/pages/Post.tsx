@@ -83,12 +83,13 @@ const Post = () => {
   return (
     <div style={{ margin: '5.5rem auto', width: '700px' }}>
       <div>
-        <Title>{post?.title}</Title>
+        <Title>{post.title}</Title>
         <Toolbar>
           <Info>
             <div>n분전</div>
           </Info>
           <div>
+            {/*todo 수정/삭제 버튼 작성*/}
             <TextButton>수정</TextButton>
             <TextButton>삭제</TextButton>
           </div>
@@ -100,7 +101,7 @@ const Post = () => {
         )}
       </div>
       <ContentsArea>
-        {post.contents?.split('\n').map((text, index) => (
+        {post.contents.split('\n').map((text, index) => (
           <Text key={index}>{text}</Text>
         ))}
       </ContentsArea>
